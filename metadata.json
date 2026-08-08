@@ -1,0 +1,6 @@
+{
+  "name": "FocusGuard - App Blocker",
+  "description": "Smart app blocker, usage limit tracker, instant accessibility overlay, and AI focus coach.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
