@@ -1,9 +1,7 @@
 package com.example.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,73 +13,115 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.components.PixelAccountProfileDialog
 import com.example.ui.components.PixelAvatarIcon
 import com.example.ui.components.PixelBgCanvas
-import com.example.ui.components.PixelCardContainer
 import com.example.ui.components.PixelCoinIcon
 import com.example.ui.components.PixelDarkBorder
-import com.example.ui.components.PixelGoldAccent
-import com.example.ui.components.PixelTimerGauge
+import com.example.ui.components.PixelLocationAwarenessHeaderCard
+import com.example.ui.components.PixelNamazAndQiblaCard
+import com.example.ui.components.PixelNearbyMasjidsCard
+import com.example.ui.components.PixelOsLocationTechModal
+import com.example.ui.components.QiblaCompassModal
+import com.example.ui.theme.SlateBlue
 import com.example.ui.viewmodel.MainViewModel
 
 @Composable
 fun FocusSessionScreen(viewModel: MainViewModel) {
-    val focusTimer by viewModel.focusTimer.collectAsState()
     val coins by viewModel.coins.collectAsState()
+    val purityIndex by viewModel.purityIndex.collectAsState()
+    val streakDays by viewModel.streakDays.collectAsState()
+    val totalZakatDonated by viewModel.totalZakatDonated.collectAsState()
+    val resistedCount by viewModel.resistedCount.collectAsState()
 
-    var selectedDuration by remember { mutableIntStateOf(25) }
-    val durations = remember { listOf(15, 25, 45, 60, 90) }
+    // Location & Mosque Management State
+    val locationState by viewModel.locationState.collectAsState()
+    val calculatedPrayers by viewModel.calculatedPrayers.collectAsState()
+    val nearbyMosques by viewModel.nearbyMosques.collectAsState()
 
-    val minutesRemaining = if (focusTimer.isActive) focusTimer.secondsRemaining / 60 else selectedDuration.toLong()
-    val secondsRemaining = if (focusTimer.isActive) focusTimer.secondsRemaining % 60 else 0L
-    val formattedTime = String.format("%02d:%02d", minutesRemaining, secondsRemaining)
+    var showAccountProfile by remember { mutableStateOf(false) }
+    var showLocationTechModal by remember { mutableStateOf(false) }
+    var showQiblaCompassModal by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+
+    // Qibla Compass Modal (Great-Circle Bearing Trigonometry & Hardware Magnetometer)
+    if (showQiblaCompassModal) {
+        QiblaCompassModal(
+            initialLocationState = locationState,
+            onDismiss = { showQiblaCompassModal = false }
+        )
+    }
+
+    // Location Engine & OS Tech Modal
+    if (showLocationTechModal) {
+        PixelOsLocationTechModal(
+            locationState = locationState,
+            onDismiss = { showLocationTechModal = false },
+            onSelectPreset = { newState ->
+                viewModel.updateLocationState(newState)
+            },
+            onSetCalculationMethod = { method ->
+                viewModel.setCalculationMethod(method)
+            },
+            onRequestRealGps = {
+                viewModel.startRealGpsTracking(context)
+            }
+        )
+    }
+
+    // Account Profile Dialog
+    if (showAccountProfile) {
+        PixelAccountProfileDialog(
+            totalCoins = coins,
+            streakDays = streakDays,
+            purityIndex = purityIndex,
+            zakatDonated = totalZakatDonated,
+            resistedCount = resistedCount,
+            onDismiss = { showAccountProfile = false }
+        )
+    }
+
+    val isDarkMode by viewModel.isDarkMode.collectAsState()
+    val textColor = if (isDarkMode) Color(0xFFF8FAFC) else SlateBlue
+    val subtextColor = if (isDarkMode) Color(0xFF94A3B8) else SlateBlue.copy(alpha = 0.75f)
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(PixelBgCanvas)
+            .background(if (isDarkMode) Color(0xFF080C14) else PixelBgCanvas)
     ) {
         // Islamic Background Tile Watermark Effect
         Canvas(modifier = Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
             val step = 80f
+            val dotColor = if (isDarkMode) Color(0xFF101726) else Color(0xFFDCDFE3)
 
             for (x in 0..(w / step).toInt()) {
                 for (y in 0..(h / step).toInt()) {
                     val px = x * step
                     val py = y * step
                     drawCircle(
-                        color = Color(0xFFDCDFE3),
+                        color = dotColor,
                         radius = 20f,
                         center = Offset(px, py),
                         style = Stroke(width = 1.5f)
@@ -109,197 +149,73 @@ fun FocusSessionScreen(viewModel: MainViewModel) {
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Focus Mode Timer",
+                        text = "Location & Prayer Engine",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = PixelDarkBorder,
+                        color = textColor,
                         letterSpacing = (-0.5).sp
                     )
                     Text(
-                        text = "Lock out distractions during high-priority focus sessions",
+                        text = "Real-time solar calculation, Qibla compass & nearby masjids radar",
                         fontSize = 10.5.sp,
-                        color = PixelDarkBorder.copy(alpha = 0.75f)
+                        color = subtextColor
                     )
                 }
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.clickable { showAccountProfile = true }
                 ) {
                     PixelCoinIcon(modifier = Modifier.size(22.dp))
                     Text(
                         text = String.format("%,d", coins),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = PixelDarkBorder
+                        color = textColor
                     )
                     PixelAvatarIcon(modifier = Modifier.size(34.dp))
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // ==========================================
-            // 2. CENTER PIXEL TIMER CIRCULAR GAUGE
+            // 2. DYNAMIC SOLAR NAMAZ & QIBLA CARD
             // ==========================================
-            PixelTimerGauge(
-                progress = if (focusTimer.isActive) focusTimer.progress else 1f,
-                formattedTime = formattedTime,
-                statusText = if (focusTimer.isActive) "Focusing..." else "Ready to Focus",
-                modifier = Modifier.size(240.dp)
+            PixelNamazAndQiblaCard(
+                calculatedPrayers = calculatedPrayers,
+                locationState = locationState,
+                onOpenTechModal = { showLocationTechModal = true },
+                onOpenQiblaCompass = { showQiblaCompassModal = true }
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // ==========================================
-            // 3. SELECT FOCUS DURATION CHIPS
+            // 3. NEARBY MASJIDS FINDER & RADAR CARD
             // ==========================================
-            AnimatedVisibility(visible = !focusTimer.isActive) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Select Focus Duration",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = PixelDarkBorder
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        items(durations) { min ->
-                            val isSelected = selectedDuration == min
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(
-                                        if (isSelected) Color(0xFFBA2D0B) else Color.White
-                                    )
-                                    .border(
-                                        width = 2.dp,
-                                        color = PixelDarkBorder,
-                                        shape = RoundedCornerShape(10.dp)
-                                    )
-                                    .clickable { selectedDuration = min }
-                                    .padding(horizontal = 14.dp, vertical = 8.dp)
-                            ) {
-                                Text(
-                                    text = "$min min",
-                                    fontSize = 12.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = if (isSelected) Color.White else PixelDarkBorder
-                                )
-                            }
-                        }
-                    }
+            PixelNearbyMasjidsCard(
+                nearbyMosques = nearbyMosques,
+                locationState = locationState,
+                onToggleBookmark = { mosqueId ->
+                    viewModel.toggleMosqueBookmark(mosqueId)
                 }
-            }
+            )
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // ==========================================
-            // 4. ACTION BUTTON (DEEP RED PIXEL BUTTON)
-            // ==========================================
-            if (focusTimer.isActive) {
-                Button(
-                    onClick = { viewModel.stopFocusTimer() },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBA2D0B)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .border(width = 2.dp, color = PixelDarkBorder, shape = RoundedCornerShape(12.dp))
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Stop,
-                        contentDescription = "End",
-                        tint = Color.White
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "End Focus Session",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White
-                    )
-                }
-            } else {
-                Button(
-                    onClick = { viewModel.startFocusTimer("Deep Work Sprint", selectedDuration) },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBA2D0B)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .border(width = 2.dp, color = PixelDarkBorder, shape = RoundedCornerShape(12.dp))
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "Start",
-                        tint = Color.White
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Start $selectedDuration Min Focus Session",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.White
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // ==========================================
-            // 5. FOCUS SHIELD GUARANTEE CARD
+            // 4. LOCATION ENGINE & OS POSITIONING HEADER CARD
             // ==========================================
-            PixelCardContainer(modifier = Modifier.fillMaxWidth()) {
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(PixelGoldAccent.copy(alpha = 0.2f))
-                                .border(1.5.dp, PixelGoldAccent, RoundedCornerShape(8.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = "Lock",
-                                tint = PixelDarkBorder,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
+            PixelLocationAwarenessHeaderCard(
+                locationState = locationState,
+                onOpenTechVisualizer = { showLocationTechModal = true }
+            )
 
-                        Spacer(modifier = Modifier.width(10.dp))
-
-                        Text(
-                            text = "Focus Shield Guarantee",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = PixelDarkBorder
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "While focus mode is active, opening any instant blocked app will automatically present the FocusGuard overlay shield.",
-                        fontSize = 11.sp,
-                        color = PixelDarkBorder.copy(alpha = 0.8f),
-                        lineHeight = 15.sp
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(90.dp))
         }
     }
 }
+
 

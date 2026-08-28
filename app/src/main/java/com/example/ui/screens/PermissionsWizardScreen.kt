@@ -20,8 +20,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessibilityNew
 import androidx.compose.material.icons.filled.BatteryAlert
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -49,6 +51,7 @@ import com.example.ui.components.PixelGoldAccent
 import com.example.ui.components.PixelGreenAccent
 import com.example.ui.components.PixelIslamicPermissionCard
 import com.example.ui.components.PixelStarBadge
+import com.example.ui.theme.SlateBlue
 import com.example.ui.viewmodel.MainViewModel
 import com.example.utils.PermissionManager
 
@@ -56,25 +59,32 @@ import com.example.utils.PermissionManager
 fun PermissionsWizardScreen(viewModel: MainViewModel) {
     val permissions by viewModel.permissions.collectAsState()
     val coins by viewModel.coins.collectAsState()
+    val isDarkMode by viewModel.isDarkMode.collectAsState()
     val context = LocalContext.current
+
+    val textColor = if (isDarkMode) Color(0xFFF8FAFC) else SlateBlue
+    val subtextColor = if (isDarkMode) Color(0xFF94A3B8) else SlateBlue.copy(alpha = 0.7f)
+    val cardSectionBg = if (isDarkMode) Color(0xFF131B2E) else Color(0xFFCBD5E1).copy(alpha = 0.4f)
+    val borderColor = if (isDarkMode) Color(0xFF2A3854) else PixelDarkBorder
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(PixelBgCanvas)
+            .background(if (isDarkMode) Color(0xFF080C14) else PixelBgCanvas)
     ) {
         // Islamic Background Tile Watermark Effect
         Canvas(modifier = Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
             val step = 80f
+            val dotColor = if (isDarkMode) Color(0xFF101726) else Color(0xFFDCDFE3)
 
             for (x in 0..(w / step).toInt()) {
                 for (y in 0..(h / step).toInt()) {
                     val px = x * step
                     val py = y * step
                     drawCircle(
-                        color = Color(0xFFDCDFE3),
+                        color = dotColor,
                         radius = 20f,
                         center = Offset(px, py),
                         style = Stroke(width = 1.5f)
@@ -103,24 +113,24 @@ fun PermissionsWizardScreen(viewModel: MainViewModel) {
                 Column(modifier = Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "Guided Path",
+                            text = "Engine & Permissions",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = PixelDarkBorder,
+                            color = textColor,
                             letterSpacing = (-0.5).sp
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "﷽",
                             fontSize = 14.sp,
-                            color = PixelDarkBorder.copy(alpha = 0.7f)
+                            color = if (isDarkMode) PixelGoldAccent else PixelDarkBorder.copy(alpha = 0.7f)
                         )
                     }
                     Text(
-                        text = "DAILY DEEN JOURNEY | SPIRITUAL VITALITY",
+                        text = "DEEN SHIELD CORE SETTINGS | REAL-TIME TELEMETRY",
                         fontSize = 8.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = PixelDarkBorder.copy(alpha = 0.7f),
+                        color = subtextColor,
                         letterSpacing = 0.8.sp
                     )
                 }
@@ -134,7 +144,7 @@ fun PermissionsWizardScreen(viewModel: MainViewModel) {
                         text = String.format("%,d", coins),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = PixelDarkBorder
+                        color = textColor
                     )
                     PixelStarBadge(
                         text = "⏱",
@@ -153,8 +163,8 @@ fun PermissionsWizardScreen(viewModel: MainViewModel) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFFCBD5E1).copy(alpha = 0.4f))
-                    .border(2.dp, PixelDarkBorder, RoundedCornerShape(14.dp))
+                    .background(cardSectionBg)
+                    .border(1.5.dp, borderColor, RoundedCornerShape(14.dp))
                     .padding(10.dp)
             ) {
                 Column(
@@ -172,7 +182,7 @@ fun PermissionsWizardScreen(viewModel: MainViewModel) {
                             text = "Permission Setup & Engine",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = PixelDarkBorder
+                            color = textColor
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         PixelCrescentStarIcon(modifier = Modifier.size(16.dp), color = PixelGoldAccent)
@@ -183,7 +193,7 @@ fun PermissionsWizardScreen(viewModel: MainViewModel) {
                     Text(
                         text = "Required high-level permissions to detect app launches, calculate screen time, and draw the block overlay.",
                         fontSize = 10.sp,
-                        color = PixelDarkBorder.copy(alpha = 0.8f),
+                        color = subtextColor,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
 
@@ -230,6 +240,34 @@ fun PermissionsWizardScreen(viewModel: MainViewModel) {
                         isGranted = permissions.isIgnoringBattery,
                         onGrantClick = { PermissionManager.openBatteryOptimizationSettings(context) }
                     )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Card 5: Precise GPS Location
+                    PixelIslamicPermissionCard(
+                        title = "5. Precise GPS Location",
+                        description = "Required for Great-Circle Kaaba Qibla bearing calculations and finding nearby masjids.",
+                        icon = Icons.Default.LocationOn,
+                        isGranted = androidx.core.content.ContextCompat.checkSelfPermission(
+                            context,
+                            android.Manifest.permission.ACCESS_FINE_LOCATION
+                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED,
+                        onGrantClick = { PermissionManager.openAppDetailsSettings(context) }
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Card 6: Live Quest Camera Proof
+                    PixelIslamicPermissionCard(
+                        title = "6. Live Proof Camera Access",
+                        description = "Required for taking real live photos to verify daily quest accomplishments.",
+                        icon = Icons.Default.CameraAlt,
+                        isGranted = androidx.core.content.ContextCompat.checkSelfPermission(
+                            context,
+                            android.Manifest.permission.CAMERA
+                        ) == android.content.pm.PackageManager.PERMISSION_GRANTED,
+                        onGrantClick = { PermissionManager.openAppDetailsSettings(context) }
+                    )
                 }
             }
 
@@ -252,7 +290,7 @@ fun PermissionsWizardScreen(viewModel: MainViewModel) {
                             text = "Android 13/14/15 Restricted Settings Fix",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = PixelDarkBorder
+                            color = textColor
                         )
                     }
 
@@ -265,7 +303,7 @@ fun PermissionsWizardScreen(viewModel: MainViewModel) {
                                 "3. Select 'Allow restricted settings'.\n" +
                                 "4. Return to Accessibility settings to turn on FocusGuard.",
                         fontSize = 10.5.sp,
-                        color = PixelDarkBorder.copy(alpha = 0.85f),
+                        color = subtextColor,
                         lineHeight = 15.sp
                     )
 
@@ -274,8 +312,8 @@ fun PermissionsWizardScreen(viewModel: MainViewModel) {
                     Button(
                         onClick = { PermissionManager.openAppDetailsSettings(context) },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = PixelDarkBorder,
-                            contentColor = Color.White
+                            containerColor = if (isDarkMode) Color(0xFF10B981) else PixelDarkBorder,
+                            contentColor = if (isDarkMode) Color(0xFF080C14) else Color.White
                         ),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier

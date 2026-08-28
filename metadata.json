@@ -1,6 +1,6 @@
 {
-  "name": "FocusGuard - App Blocker",
-  "description": "Smart app blocker, usage limit tracker, instant accessibility overlay, and AI focus coach.",
+  "name": "FocusGuard",
+  "description": "Pixel-art spiritual productivity and focus shield with smart app limits, quest tracking, and Islamic mindfulness.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -149,13 +149,18 @@ class AppRepository(
 
     suspend fun updateAppLimit(packageName: String, appName: String, limitMinutes: Int, isInstantBlocked: Boolean) = withContext(Dispatchers.IO) {
         val existing = dao.getAppByPackage(packageName)
+        val todayUsageSec = existing?.todayUsageSeconds ?: (UsageTracker.getTodayUsageStats(context)[packageName] ?: 0L) / 1000L
+        val limitSec = limitMinutes * 60L
+        val isLimitExceeded = todayUsageSec >= limitSec && limitMinutes > 0
+
         val entity = BlockedAppEntity(
             packageName = packageName,
             appName = appName,
             dailyLimitMinutes = limitMinutes,
             isInstantBlocked = isInstantBlocked,
             category = existing?.category ?: "App",
-            todayUsageSeconds = existing?.todayUsageSeconds ?: 0L,
+            todayUsageSeconds = todayUsageSec,
+            isLimitExceeded = isLimitExceeded,
             isEnabled = true
         )
         dao.insertOrUpdateApp(entity)

@@ -11,6 +11,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Timer
@@ -22,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,22 +39,28 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.ui.components.PixelBgCanvas
 import com.example.ui.components.PixelBottomNavBar
-import com.example.ui.screens.AICoachScreen
 import com.example.ui.screens.AppListScreen
 import com.example.ui.screens.DashboardScreen
 import com.example.ui.screens.FocusSessionScreen
+import com.example.ui.screens.LeaderboardScreen
+import com.example.ui.screens.OnboardingScreen
 import com.example.ui.screens.PermissionsWizardScreen
 import com.example.ui.screens.PointsDetailScreen
+import com.example.ui.screens.ProfileSettingsScreen
+import com.example.ui.theme.AlabasterSand
 import com.example.ui.theme.MyApplicationTheme
+import com.example.ui.theme.SlateBlue
 import com.example.ui.viewmodel.MainViewModel
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
     object Dashboard : Screen("dashboard", "Guided Path", Icons.Default.Dashboard)
-    object Focus : Screen("focus", "Focus", Icons.Default.Timer)
-    object Apps : Screen("apps", "App Shield", Icons.Default.Apps)
+    object Focus : Screen("focus", "Prayer & Location", Icons.Default.Explore)
+    object Apps : Screen("apps", "Apps you want to block", Icons.Default.Apps)
     object Permissions : Screen("permissions", "Engine", Icons.Default.Shield)
-    object AICoach : Screen("aicoach", "AI Coach", Icons.Default.AutoAwesome)
+    object Leaderboard : Screen("leaderboard", "Leaderboard", Icons.Default.Star)
     object Quests : Screen("quests", "Quests & Points", Icons.Default.Star)
+    object Onboarding : Screen("onboarding", "Diagnostic", Icons.Default.Shield)
+    object Profile : Screen("profile", "Profile", Icons.Default.Person)
 }
 
 class MainActivity : ComponentActivity() {
@@ -66,7 +75,9 @@ class MainActivity : ComponentActivity() {
         viewModel.startForegroundServiceIfPermissionsGranted(this)
 
         setContent {
-            MyApplicationTheme(darkTheme = true) {
+            val isDarkMode by viewModel.isDarkMode.collectAsState()
+            val scaffoldBg = if (isDarkMode) Color(0xFF080C14) else AlabasterSand
+            MyApplicationTheme(darkTheme = isDarkMode) {
                 // Lifecycle observer to refresh permission status when returning from Settings
                 val lifecycleOwner = LocalLifecycleOwner.current
                 DisposableEffect(lifecycleOwner) {
@@ -83,14 +94,30 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                MainAppContent(viewModel = viewModel)
+                MainAppContent(viewModel = viewModel, isDarkMode = isDarkMode, scaffoldBg = scaffoldBg)
             }
         }
     }
 }
 
 @Composable
-fun MainAppContent(viewModel: MainViewModel) {
+fun MainAppContent(
+    viewModel: MainViewModel,
+    isDarkMode: Boolean = false,
+    scaffoldBg: Color = AlabasterSand
+) {
+    val isOnboardingCompleted by viewModel.isOnboardingCompleted.collectAsState()
+
+    if (!isOnboardingCompleted) {
+        OnboardingScreen(
+            viewModel = viewModel,
+            onComplete = {
+                // Onboarding complete transitions directly into Main Dashboard
+            }
+        )
+        return
+    }
+
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: Screen.Dashboard.route
@@ -100,27 +127,30 @@ fun MainAppContent(viewModel: MainViewModel) {
         Screen.Apps,
         Screen.Focus,
         Screen.Permissions,
-        Screen.AICoach
+        Screen.Leaderboard
     )
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = PixelBgCanvas,
+        containerColor = scaffoldBg,
+        contentColor = if (isDarkMode) Color(0xFFF8FAFC) else SlateBlue,
         bottomBar = {
-            PixelBottomNavBar(
-                currentRoute = currentRoute,
-                onNavigate = { route ->
-                    if (currentRoute != route) {
-                        navController.navigate(route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
+            if (currentRoute != Screen.Onboarding.route && currentRoute != Screen.Profile.route) {
+                PixelBottomNavBar(
+                    currentRoute = currentRoute,
+                    onNavigate = { route ->
+                        if (currentRoute != route) {
+                            navController.navigate(route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
                         }
                     }
-                }
-            )
+                )
+            }
         }
     ) { innerPadding ->
         NavHost(
@@ -134,8 +164,27 @@ fun MainAppContent(viewModel: MainViewModel) {
                     onNavigateToApps = { navController.navigate(Screen.Apps.route) },
                     onNavigateToFocus = { navController.navigate(Screen.Focus.route) },
                     onNavigateToPermissions = { navController.navigate(Screen.Permissions.route) },
-                    onNavigateToAICoach = { navController.navigate(Screen.AICoach.route) },
-                    onNavigateToQuests = { navController.navigate(Screen.Quests.route) }
+                    onNavigateToLeaderboard = { navController.navigate(Screen.Leaderboard.route) },
+                    onNavigateToQuests = { navController.navigate(Screen.Quests.route) },
+                    onNavigateToOnboarding = { navController.navigate(Screen.Onboarding.route) },
+                    onNavigateToProfile = { navController.navigate(Screen.Profile.route) }
+                )
+            }
+
+            composable(Screen.Profile.route) {
+                ProfileSettingsScreen(
+                    viewModel = viewModel,
+                    onBack = { navController.popBackStack() },
+                    onNavigateToOnboarding = { navController.navigate(Screen.Onboarding.route) },
+                    onNavigateToApps = { navController.navigate(Screen.Apps.route) },
+                    onNavigateToPermissionsWizard = { navController.navigate(Screen.Permissions.route) }
+                )
+            }
+
+            composable(Screen.Onboarding.route) {
+                OnboardingScreen(
+                    viewModel = viewModel,
+                    onComplete = { navController.popBackStack() }
                 )
             }
 
@@ -158,8 +207,8 @@ fun MainAppContent(viewModel: MainViewModel) {
                 PermissionsWizardScreen(viewModel = viewModel)
             }
 
-            composable(Screen.AICoach.route) {
-                AICoachScreen(viewModel = viewModel)
+            composable(Screen.Leaderboard.route) {
+                LeaderboardScreen(viewModel = viewModel)
             }
         }
     }

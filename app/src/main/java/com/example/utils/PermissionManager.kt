@@ -156,6 +156,70 @@ object PermissionManager {
     }
 
     /**
+     * Check if Location Permission (Fine or Coarse) is granted.
+     */
+    fun hasLocationPermission(context: Context): Boolean {
+        val fineLocation = androidx.core.content.ContextCompat.checkSelfPermission(
+            context,
+            android.Manifest.permission.ACCESS_FINE_LOCATION
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+        val coarseLocation = androidx.core.content.ContextCompat.checkSelfPermission(
+            context,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+        return fineLocation || coarseLocation
+    }
+
+    /**
+     * Check if Notification Permission is granted.
+     */
+    fun hasNotificationPermission(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            androidx.core.content.ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        } else {
+            androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()
+        }
+    }
+
+    /**
+     * Helper to open Notification Settings.
+     */
+    fun openNotificationSettings(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            try {
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                openAppDetailsSettings(context)
+            }
+        } else {
+            openAppDetailsSettings(context)
+        }
+    }
+
+    /**
+     * Helper to open Location Settings.
+     */
+    fun openLocationSettings(context: Context) {
+        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            openAppDetailsSettings(context)
+        }
+    }
+
+    /**
      * Helper to open App Info (for Android 13+ Restricted Settings menu).
      */
     fun openAppDetailsSettings(context: Context) {

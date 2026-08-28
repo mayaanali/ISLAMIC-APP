@@ -8,35 +8,41 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
+val LocalIsDarkTheme = compositionLocalOf { true }
+
 private val DarkColorScheme = darkColorScheme(
-    primary = IndigoPrimary,
-    secondary = IndigoSecondary,
-    tertiary = CyanAccent,
-    background = DarkBackground,
-    surface = DarkSurface,
-    surfaceVariant = DarkSurfaceVariant,
-    onPrimary = Color.White,
+    primary = Color(0xFF10B981),       // Radiant Emerald Green
+    secondary = Color(0xFFF43F5E),     // Ruby Red
+    tertiary = Color(0xFFF59E0B),      // Warm Amber Gold
+    background = Color(0xFF080C14),    // Midnight Obsidian Canvas
+    surface = Color(0xFF131B2E),       // Elevated Midnight Navy Card
+    surfaceVariant = Color(0xFF1E293B),
+    onPrimary = Color(0xFF080C14),
     onSecondary = Color.White,
-    onBackground = Color.White,
-    onSurface = Color.White,
-    error = CoralWarning
+    onTertiary = Color(0xFF080C14),
+    onBackground = Color(0xFFF8FAFC),  // Crisp Titanium White
+    onSurface = Color(0xFFF8FAFC),
+    error = Color(0xFFFB7185)
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = LightPrimary,
-    secondary = LightSecondary,
-    tertiary = CyanAccent,
-    background = LightBackground,
-    surface = LightSurface,
-    surfaceVariant = LightSurfaceVariant,
+    primary = EmeraldGreen,            // Emerald Green (0xFF2ECC71)
+    secondary = RubyRed,               // Ruby Red (0xFFFF5252)
+    tertiary = DesertGold,             // Desert Gold (0xFFFFC300)
+    background = AlabasterSand,        // Alabaster Sand (0xFFF4F6F9)
+    surface = Color(0xFFFFFFFF),       // Pure White
+    surfaceVariant = Color(0xFFE2E8F0),
     onPrimary = Color.White,
     onSecondary = Color.White,
-    onBackground = Color(0xFF1B1D36),
-    onSurface = Color(0xFF1B1D36),
-    error = CoralWarning
+    onTertiary = SlateBlue,
+    onBackground = SlateBlue,          // Soft Navy (0xFF2C3E50)
+    onSurface = SlateBlue,
+    error = RubyRed
 )
 
 @Composable
@@ -54,10 +60,14 @@ fun MyApplicationTheme(
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(
+        LocalIsDarkTheme provides darkTheme
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }
 

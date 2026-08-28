@@ -2,17 +2,31 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val IndigoPrimary = Color(0xFF6C5CE7)
-val IndigoSecondary = Color(0xFFA29BFE)
-val CyanAccent = Color(0xFF00CEC9)
-val CoralWarning = Color(0xFFFF6B81)
-val DarkBackground = Color(0xFF0F101D)
-val DarkSurface = Color(0xFF1B1D36)
-val DarkSurfaceVariant = Color(0xFF25284B)
+// The "Guided Path" Palette
+val AlabasterSand = Color(0xFFF4F6F9) // Base Canvas Background
+val EmeraldGreen = Color(0xFF2ECC71)  // Primary Accent (Growth & Prayer)
+val RubyRed = Color(0xFFFF5252)       // Secondary Accent (The Core 3D Heart)
+val DesertGold = Color(0xFFFFC300)    // Premium Accent (Marketplace, Zakat, Crowns)
+val SlateBlue = Color(0xFF2C3E50)     // Text & Deep Elements (Soft Navy)
 
-val LightPrimary = Color(0xFF5B4BC4)
-val LightSecondary = Color(0xFF8C7AE6)
-val LightBackground = Color(0xFFF7F8FC)
-val LightSurface = Color(0xFFFFFFFF)
-val LightSurfaceVariant = Color(0xFFEEF0F8)
+// Neumorphic Soft Shadow Palette
+val NeumorphicLightHighlight = Color(0xFFFFFFFF) // Soft top-left light source
+val NeumorphicDarkShadow = Color(0xFFCBD5E1)     // Soft bottom-right shadow on Alabaster Sand
+val NeumorphicCardBg = Color(0xFFF4F6F9)         // Neumorphic extruded surface
+
+// Legacy aliases for backward compatibility
+val IndigoPrimary = EmeraldGreen
+val IndigoSecondary = DesertGold
+val CyanAccent = EmeraldGreen
+val CoralWarning = RubyRed
+val DarkBackground = AlabasterSand
+val DarkSurface = AlabasterSand
+val DarkSurfaceVariant = Color(0xFFE2E8F0)
+
+val LightPrimary = EmeraldGreen
+val LightSecondary = DesertGold
+val LightBackground = AlabasterSand
+val LightSurface = AlabasterSand
+val LightSurfaceVariant = Color(0xFFE2E8F0)
+
 

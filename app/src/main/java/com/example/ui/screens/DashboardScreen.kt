@@ -31,7 +31,9 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.HourglassBottom
 import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -55,6 +57,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -63,6 +66,7 @@ import com.example.data.DailyQuest
 import com.example.data.PrayerItem
 import com.example.data.QuestCategory
 import com.example.ui.components.DoraemonEasterEgg
+import com.example.ui.components.GuidedPathHeader
 import com.example.ui.components.PixelAccountProfileDialog
 import com.example.ui.components.PixelAnimatedErrorScreen
 import com.example.ui.components.PixelAnimatedLoadingScreen
@@ -77,10 +81,13 @@ import com.example.ui.components.PixelGreenAccent
 import com.example.ui.components.PixelLiveIrlTipsModal
 import com.example.ui.components.PixelLiveIrlTrackerCard
 import com.example.ui.components.PixelPurityGauge
+import com.example.ui.components.PixelGlobalSearchSheet
 import com.example.ui.components.PixelQuestActionDialog
 import com.example.ui.components.PixelRedHeart
 import com.example.ui.components.PixelSetLimitDialog
+import com.example.ui.components.PixelThemeToggleSwitch
 import com.example.ui.components.PixelXpLevelBar
+import com.example.ui.theme.SlateBlue
 import com.example.ui.viewmodel.MainViewModel
 
 @Composable
@@ -89,8 +96,10 @@ fun DashboardScreen(
     onNavigateToApps: () -> Unit,
     onNavigateToFocus: () -> Unit,
     onNavigateToPermissions: () -> Unit,
-    onNavigateToAICoach: () -> Unit,
-    onNavigateToQuests: () -> Unit = {}
+    onNavigateToLeaderboard: () -> Unit = {},
+    onNavigateToQuests: () -> Unit = {},
+    onNavigateToOnboarding: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {}
 ) {
     val coins by viewModel.coins.collectAsState()
     val purityIndex by viewModel.purityIndex.collectAsState()
@@ -106,13 +115,56 @@ fun DashboardScreen(
     val isLoadingApps by viewModel.isLoadingApps.collectAsState()
     val hasError by viewModel.hasError.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+    val userArchetype by viewModel.userArchetype.collectAsState()
+    val nightShieldActive by viewModel.nightShieldActive.collectAsState()
+    val userName by viewModel.userName.collectAsState()
+    val initials = remember(userName) {
+        userName.split(" ")
+            .mapNotNull { it.firstOrNull()?.toString() }
+            .take(2)
+            .joinToString("")
+            .ifEmpty { "JD" }
+    }
+
+    // Dark Mode State (Item 1)
+    val isDarkMode by viewModel.isDarkMode.collectAsState()
+
+    // Location & Mosque Management State
+    val locationState by viewModel.locationState.collectAsState()
+    val calculatedPrayers by viewModel.calculatedPrayers.collectAsState()
+    val nearbyMosques by viewModel.nearbyMosques.collectAsState()
 
     var pullOffsetPx by remember { mutableFloatStateOf(0f) }
     var isPrayersExpanded by remember { mutableStateOf(false) }
     var showSetLimitDialog by remember { mutableStateOf(false) }
     var showIrlTipsModal by remember { mutableStateOf(false) }
     var showAccountProfile by remember { mutableStateOf(false) }
+    var showGlobalSearchSheet by remember { mutableStateOf(false) }
     var selectedQuestForAction by remember { mutableStateOf<DailyQuest?>(null) }
+    var selectedAppForLimit by remember { mutableStateOf<com.example.data.InstalledAppItem?>(null) }
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    // In-App Global Search & Discovery Sheet (Item 3 - In-App Search)
+    if (showGlobalSearchSheet) {
+        PixelGlobalSearchSheet(
+            viewModel = viewModel,
+            isOpen = showGlobalSearchSheet,
+            onDismiss = { showGlobalSearchSheet = false },
+            onNavigateToApps = onNavigateToApps,
+            onNavigateToFocus = onNavigateToFocus,
+            onOpenLimitDialog = { app ->
+                selectedAppForLimit = app
+                showSetLimitDialog = true
+            },
+            onOpenQuestDialog = { quest ->
+                selectedQuestForAction = quest
+            },
+            onOpenProfileDialog = {
+                showAccountProfile = true
+            }
+        )
+    }
 
     // Account Profile Dialog
     if (showAccountProfile) {
@@ -122,6 +174,13 @@ fun DashboardScreen(
             purityIndex = purityIndex,
             zakatDonated = totalZakatDonated,
             resistedCount = resistedCount,
+            isDarkMode = isDarkMode,
+            userArchetype = userArchetype,
+            onRetakeDiagnostic = {
+                viewModel.restartOnboarding()
+                onNavigateToOnboarding()
+            },
+            onToggleDarkMode = { viewModel.toggleDarkMode() },
             onDismiss = { showAccountProfile = false }
         )
     }
@@ -162,10 +221,15 @@ fun DashboardScreen(
     val pointsEarnedToday = completedPrayerPoints + completedQuestPoints
     val unclaimedQuestPoints = dailyQuests.filter { !it.isCompleted }.sumOf { it.points }
 
+    val textColor = if (isDarkMode) Color(0xFFF8FAFC) else SlateBlue
+    val subtextColor = if (isDarkMode) Color(0xFF94A3B8) else SlateBlue.copy(alpha = 0.7f)
+    val dropdownBg = if (isDarkMode) Color(0xFF1E293B) else Color(0xFFF1F5F9)
+    val dropdownBorder = if (isDarkMode) Color(0xFF334155) else Color(0xFFCBD5E1)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(PixelBgCanvas)
+            .background(if (isDarkMode) Color(0xFF080C14) else PixelBgCanvas)
             .pointerInput(Unit) {
                 detectVerticalDragGestures(
                     onVerticalDrag = { _, dragAmount ->
@@ -182,19 +246,21 @@ fun DashboardScreen(
             val w = size.width
             val h = size.height
             val step = 80f
+            val dotColor = if (isDarkMode) Color(0xFF101726) else Color(0xFFDCDFE3)
+            val lineCol = if (isDarkMode) Color(0xFF0D1420) else Color(0xFFE2E5E9)
 
             for (x in 0..(w / step).toInt()) {
                 for (y in 0..(h / step).toInt()) {
                     val px = x * step
                     val py = y * step
                     drawCircle(
-                        color = Color(0xFFDCDFE3),
+                        color = dotColor,
                         radius = 20f,
                         center = Offset(px, py),
                         style = Stroke(width = 1.5f)
                     )
                     drawLine(
-                        color = Color(0xFFE2E5E9),
+                        color = lineCol,
                         start = Offset(px - 10f, py),
                         end = Offset(px + 10f, py),
                         strokeWidth = 1f
@@ -214,70 +280,19 @@ fun DashboardScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // ==========================================
-            // 1. TOP HEADER SECTION
+            // 1. TOP HEADER SECTION (Matching Image 2)
             // ==========================================
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp, bottom = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Title and Subtitle
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Guided Path",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = PixelDarkBorder,
-                        letterSpacing = (-0.5).sp
-                    )
-                    Text(
-                        text = "DAILY DEEN JOURNEY | SPIRITUAL VITALITY",
-                        fontSize = 8.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = PixelDarkBorder.copy(alpha = 0.7f),
-                        letterSpacing = 0.8.sp
-                    )
-                }
+            GuidedPathHeader(
+                coins = coins,
+                initials = initials,
+                onCoinClick = { onNavigateToQuests() },
+                onProfileClick = { onNavigateToProfile() }
+            )
 
-                // Calligraphy Header
-                Text(
-                    text = "بِسْمِ اللَّهِ",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = PixelDarkBorder,
-                    modifier = Modifier.padding(horizontal = 4.dp)
-                )
-
-                // Coin Counter & Pixel Avatar
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    PixelCoinIcon(modifier = Modifier.size(20.dp))
-                    Text(
-                        text = String.format("%,d pts", coins),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = PixelDarkBorder
-                    )
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Box(modifier = Modifier.clickable { showAccountProfile = true }) {
-                        PixelAvatarIcon(modifier = Modifier.size(30.dp))
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Gamified 2D XP & Level Progress Bar
-            PixelXpLevelBar(coins = coins)
-
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             // ==========================================
-            // 2. PURITY INDEX CIRCULAR GAUGE (With Islamic Pattern & Solid 8-Bit Pixel Heart)
+            // 2. PURITY INDEX CIRCULAR GAUGE (Pixel Heart)
             // ==========================================
             Box(
                 modifier = Modifier
@@ -290,16 +305,89 @@ fun DashboardScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // ==========================================
+            // IN-APP SEARCH & QUICK DISCOVERY BAR (Option A)
+            // ==========================================
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (isDarkMode) Color(0xFF131B2E) else Color.White)
+                    .border(
+                        1.2.dp,
+                        if (isDarkMode) Color(0xFF2A3854) else Color(0xFFCBD5E1),
+                        RoundedCornerShape(16.dp)
+                    )
+                    .clickable { showGlobalSearchSheet = true }
+                    .padding(horizontal = 14.dp, vertical = 10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search In-App",
+                            tint = if (isDarkMode) Color(0xFF10B981) else SlateBlue,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Search apps, quests, salah, actions...",
+                            fontSize = 12.5.sp,
+                            color = subtextColor,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        PixelThemeToggleSwitch(
+                            isDarkMode = isDarkMode,
+                            onToggle = { viewModel.toggleDarkMode() }
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isDarkMode) Color(0xFF1E293B) else Color(0xFFF1F5F9))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = "FILTER ⚡",
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = if (isDarkMode) Color(0xFFF59E0B) else SlateBlue
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Gamified 2D XP & Level Progress Bar
+            PixelXpLevelBar(coins = coins)
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             // Real-Time IRL Screen Time Tracker Card
             PixelLiveIrlTrackerCard(
                 liveTotalSeconds = liveTotalSeconds,
                 onClick = { showIrlTipsModal = true }
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // ==========================================
-            // 3. ACTIVE SHIELD CARD (Matches screenshot)
+            // 3. ACTIVE SHIELD CARD
             // ==========================================
             PixelCardContainer(
                 modifier = Modifier
@@ -330,12 +418,12 @@ fun DashboardScreen(
                                 text = "Active Shield",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = PixelDarkBorder
+                                color = textColor
                             )
                             Text(
-                                text = "Instagram blocked • Focus active",
+                                text = "App Blocker & Limits Active",
                                 fontSize = 11.sp,
-                                color = PixelDarkBorder.copy(alpha = 0.7f)
+                                color = subtextColor
                             )
                         }
                     }
@@ -346,7 +434,7 @@ fun DashboardScreen(
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = "Safe",
+                            text = "Protected",
                             fontSize = 10.5.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = Color.White
@@ -356,6 +444,113 @@ fun DashboardScreen(
             }
 
             Spacer(modifier = Modifier.height(12.dp))
+
+            // ==========================================
+            // SPIRITUAL BLUEPRINT & INTERVENTION CARD
+            // ==========================================
+            PixelCardContainer(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(PixelGoldAccent.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = when (userArchetype) {
+                                        com.example.data.UserArchetype.SHIELD_SEEKER -> "🛡️"
+                                        com.example.data.UserArchetype.ANCHORLESS -> "⚓"
+                                        com.example.data.UserArchetype.DISTRACTED -> "⚡"
+                                        com.example.data.UserArchetype.IHSAN_STRIVER -> "✨"
+                                    },
+                                    fontSize = 14.sp
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = userArchetype.title.uppercase(),
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = if (isDarkMode) PixelGoldAccent else SlateBlue
+                                )
+                                Text(
+                                    text = userArchetype.subtitle,
+                                    fontSize = 9.sp,
+                                    color = subtextColor
+                                )
+                            }
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(PixelGreenAccent.copy(alpha = 0.15f))
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        ) {
+                            Text(
+                                text = userArchetype.badge,
+                                fontSize = 8.5.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = PixelGreenAccent
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Primary Focus & Night Shield Toggle
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isDarkMode) Color(0xFF162238) else Color(0xFFF1F5F9))
+                            .padding(horizontal = 10.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Night Shield (10:30 PM - 5:00 AM)",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = textColor
+                            )
+                            Text(
+                                text = if (nightShieldActive) "Strict lock on trigger apps enabled" else "Shield lock disabled",
+                                fontSize = 9.sp,
+                                color = subtextColor
+                            )
+                        }
+
+                        PixelThemeToggleSwitch(
+                            isDarkMode = nightShieldActive,
+                            onToggle = { viewModel.toggleNightShield(!nightShieldActive) }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Quran Quote snippet
+                    Text(
+                        text = "“${userArchetype.quranVerse.take(65)}...” — ${userArchetype.quranRef}",
+                        fontSize = 9.5.sp,
+                        fontStyle = FontStyle.Italic,
+                        color = subtextColor
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
 
             // ==========================================
             // 4. POINTS EARNED TODAY & PRAYER TRACKER BOX
@@ -378,7 +573,7 @@ fun DashboardScreen(
                                 text = "PRAYER TRACKER & POINTS EARNED TODAY",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = PixelDarkBorder.copy(alpha = 0.7f),
+                                color = subtextColor,
                                 letterSpacing = 0.8.sp
                             )
                             Row(verticalAlignment = Alignment.Bottom) {
@@ -393,7 +588,7 @@ fun DashboardScreen(
                                     text = "pts Today",
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = PixelDarkBorder,
+                                    color = textColor,
                                     modifier = Modifier.padding(bottom = 2.dp)
                                 )
                             }
@@ -404,8 +599,8 @@ fun DashboardScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFFF1F5F9))
-                                .border(1.dp, Color(0xFFCBD5E1), RoundedCornerShape(8.dp))
+                                .background(dropdownBg)
+                                .border(1.dp, dropdownBorder, RoundedCornerShape(8.dp))
                                 .clickable { isPrayersExpanded = !isPrayersExpanded }
                                 .padding(horizontal = 10.dp, vertical = 6.dp)
                         ) {
@@ -413,13 +608,13 @@ fun DashboardScreen(
                                 text = "Prayers",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = PixelDarkBorder
+                                color = textColor
                             )
                             Spacer(modifier = Modifier.width(2.dp))
                             Icon(
                                 imageVector = if (isPrayersExpanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
                                 contentDescription = "Toggle Prayers Dropdown",
-                                tint = PixelDarkBorder,
+                                tint = textColor,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -436,7 +631,7 @@ fun DashboardScreen(
                             .height(8.dp)
                             .clip(RoundedCornerShape(4.dp)),
                         color = PixelGreenAccent,
-                        trackColor = Color(0xFFE2E8F0)
+                        trackColor = if (isDarkMode) Color(0xFF334155) else Color(0xFFE2E8F0)
                     )
 
                     // 5 Prayer Sequence List - Only visible when drop down menu is clicked
@@ -456,7 +651,7 @@ fun DashboardScreen(
                                         Icon(
                                             imageVector = Icons.Default.CheckCircle,
                                             contentDescription = null,
-                                            tint = if (prayer.isCompleted) PixelGreenAccent else Color(0xFFCBD5E1),
+                                            tint = if (prayer.isCompleted) PixelGreenAccent else if (isDarkMode) Color(0xFF475569) else Color(0xFFCBD5E1),
                                             modifier = Modifier.size(18.dp)
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
@@ -464,7 +659,7 @@ fun DashboardScreen(
                                             text = prayer.name,
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = if (prayer.isCompleted) PixelDarkBorder else PixelDarkBorder.copy(alpha = 0.6f)
+                                            color = if (prayer.isCompleted) textColor else subtextColor
                                         )
                                     }
 
@@ -472,7 +667,7 @@ fun DashboardScreen(
                                         text = "+${prayer.totalPoints} pts",
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.ExtraBold,
-                                        color = if (prayer.isCompleted) PixelGreenAccent else PixelDarkBorder.copy(alpha = 0.5f)
+                                        color = if (prayer.isCompleted) PixelGreenAccent else subtextColor
                                     )
                                 }
                             }
@@ -486,7 +681,7 @@ fun DashboardScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFFFEF3C7), shape = RoundedCornerShape(8.dp))
+                                .background(if (isDarkMode) Color(0xFF78350F).copy(alpha = 0.35f) else Color(0xFFFEF3C7), shape = RoundedCornerShape(8.dp))
                                 .border(1.dp, PixelGoldAccent, RoundedCornerShape(8.dp))
                                 .clickable {
                                     viewModel.claimAllPendingQuests()
@@ -503,13 +698,13 @@ fun DashboardScreen(
                                     text = "⚡ You have $unclaimedQuestPoints unclaimed quest points!",
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.ExtraBold,
-                                    color = Color(0xFFB45309)
+                                    color = if (isDarkMode) PixelGoldAccent else Color(0xFFB45309)
                                 )
                                 Text(
                                     text = "Tap to claim →",
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = PixelDarkBorder
+                                    color = textColor
                                 )
                             }
                         }
@@ -545,7 +740,7 @@ fun DashboardScreen(
                             text = "SCREEN TIME LIMIT (TAP TO SET)",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            color = PixelDarkBorder.copy(alpha = 0.7f),
+                            color = subtextColor,
                             letterSpacing = 0.8.sp
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -560,13 +755,13 @@ fun DashboardScreen(
                                 text = "${remainingScreenTimeMinutes}m Left",
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = PixelDarkBorder
+                                color = textColor
                             )
                         }
                         Text(
                             text = "Social Media: ${socialMediaLimitMinutes}m | Apps: ${generalAppsLimitMinutes}m",
                             fontSize = 9.5.sp,
-                            color = PixelDarkBorder.copy(alpha = 0.65f)
+                            color = subtextColor
                         )
                     }
 
@@ -577,7 +772,7 @@ fun DashboardScreen(
                             .height(8.dp)
                             .clip(RoundedCornerShape(4.dp)),
                         color = PixelGoldAccent,
-                        trackColor = Color(0xFFE2E8F0)
+                        trackColor = if (isDarkMode) Color(0xFF334155) else Color(0xFFE2E8F0)
                     )
                 }
             }

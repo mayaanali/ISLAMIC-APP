@@ -100,17 +100,19 @@ fun QalbHeartCanvas(
         }
     }
 
-    // Dynamic Noor Aura Colors based on streak progress
+    // Dynamic Noor Aura Colors based on streak progress (Guided Path Palette)
+    val heartCoreColor = Color(0xFFFF5252) // Ruby Red - The Core 3D Heart
+
     val auraColorCore = when {
-        streakDays >= 30 -> Color(0xFF00CEC9) // High Focus Emerald Cyan
-        streakDays >= 14 -> Color(0xFF6C5CE7) // Deep Spirit Violet Indigo
-        else -> Color(0xFFFF6B81)             // Warm Ruby Rose
+        streakDays >= 30 -> Color(0xFFFFC300) // Desert Gold
+        streakDays >= 14 -> Color(0xFF2ECC71) // Emerald Green
+        else -> Color(0xFFFF5252)             // Ruby Red
     }
 
     val auraColorOuter = when {
-        streakDays >= 30 -> Color(0xFF81ECEC).copy(alpha = 0.15f)
-        streakDays >= 14 -> Color(0xFFA29BFE).copy(alpha = 0.15f)
-        else -> Color(0xFFFFA502).copy(alpha = 0.15f)
+        streakDays >= 30 -> Color(0xFFFFC300).copy(alpha = 0.20f)
+        streakDays >= 14 -> Color(0xFF2ECC71).copy(alpha = 0.20f)
+        else -> Color(0xFFFF5252).copy(alpha = 0.18f)
     }
 
     Box(
@@ -209,9 +211,9 @@ fun QalbHeartCanvas(
                         path = heartPath,
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                Color.White.copy(alpha = 0.9f),
-                                auraColorCore,
-                                Color(0xFF100E1D)
+                                Color.White.copy(alpha = 0.95f),
+                                heartCoreColor,
+                                Color(0xFF8B0000) // Deep Dark Ruby Shadow
                             ),
                             center = Offset(centerX - width * 0.08f, centerY - height * 0.08f),
                             radius = width * 0.35f

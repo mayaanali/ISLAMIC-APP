@@ -32,19 +32,19 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-// Clay Neumorphic Palette Colors
-val ClayBgDark = Color(0xFF181A28)
-val ClaySurfaceDark = Color(0xFF181A28)
-val ClayLightShadowDark = Color(0xFF26293D)
-val ClayDarkShadowDark = Color(0xFF0C0D15)
+// Clay Neumorphic Palette Colors (The Guided Path)
+val ClayBgDark = Color(0xFF080C14)
+val ClaySurfaceDark = Color(0xFF131B2E)
+val ClayLightShadowDark = Color(0xFF2A3854).copy(alpha = 0.4f)
+val ClayDarkShadowDark = Color(0xFF020408).copy(alpha = 0.95f)
 
-val ClayBgLight = Color(0xFFE8ECEF)
-val ClaySurfaceLight = Color(0xFFE8ECEF)
-val ClayLightShadowLight = Color(0xFFFFFFFF)
-val ClayDarkShadowLight = Color(0xFFB8C2CC)
+val ClayBgLight = AlabasterSand
+val ClaySurfaceLight = Color(0xFFFFFFFF)
+val ClayLightShadowLight = NeumorphicLightHighlight
+val ClayDarkShadowLight = NeumorphicDarkShadow
 
 @Composable
-fun getClayColors(isDark: Boolean = true): Triple<Color, Color, Color> {
+fun getClayColors(isDark: Boolean = LocalIsDarkTheme.current): Triple<Color, Color, Color> {
     return if (isDark) {
         Triple(ClaySurfaceDark, ClayLightShadowDark, ClayDarkShadowDark)
     } else {
@@ -59,7 +59,7 @@ fun getClayColors(isDark: Boolean = true): Triple<Color, Color, Color> {
 fun NeumorphicBox(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(20.dp),
-    isDark: Boolean = true,
+    isDark: Boolean = LocalIsDarkTheme.current,
     elevation: Dp = 6.dp,
     contentAlignment: Alignment = Alignment.Center,
     content: @Composable BoxScope.() -> Unit
@@ -128,7 +128,7 @@ fun NeumorphicBox(
 fun NeumorphicInsetBox(
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(20.dp),
-    isDark: Boolean = true,
+    isDark: Boolean = LocalIsDarkTheme.current,
     glowColor: Color? = null,
     contentAlignment: Alignment = Alignment.Center,
     content: @Composable BoxScope.() -> Unit
@@ -195,7 +195,7 @@ fun NeumorphicButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(24.dp),
-    isDark: Boolean = true,
+    isDark: Boolean = LocalIsDarkTheme.current,
     isPressed: Boolean = false,
     contentAlignment: Alignment = Alignment.Center,
     content: @Composable BoxScope.() -> Unit

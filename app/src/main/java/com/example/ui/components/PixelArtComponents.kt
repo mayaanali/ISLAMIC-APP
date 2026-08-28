@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -21,9 +23,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.res.painterResource
+import com.example.R
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -92,79 +97,87 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-// Theme Colors for Guided Path Retro Aesthetic
-val PixelBgCanvas = Color(0xFFF1F3F5)
-val PixelCardBg = Color(0xFFFFFFFF)
-val PixelDarkBorder = Color(0xFF2B2E3A)
-val PixelGreenAccent = Color(0xFF2EC4B6)
-val PixelGoldAccent = Color(0xFFFFB703)
-val PixelRedHeart = Color(0xFFE63946)
+import com.example.ui.theme.AlabasterSand
+import com.example.ui.theme.EmeraldGreen
+import com.example.ui.theme.RubyRed
+import com.example.ui.theme.DesertGold
+import com.example.ui.theme.SlateBlue
+import com.example.ui.theme.NeumorphicBox
+import com.example.ui.theme.NeumorphicInsetBox
+import com.example.ui.theme.NeumorphicButton
+
+import com.example.ui.theme.LocalIsDarkTheme
+
+// Theme Colors for The Guided Path Neumorphic Aesthetic
+val PixelBgCanvas = AlabasterSand
+val PixelCardBg = AlabasterSand
+val PixelDarkBorder = SlateBlue
+val PixelGreenAccent = EmeraldGreen
+val PixelGoldAccent = DesertGold
+val PixelRedHeart = RubyRed
+
+val pixelBgCanvas: Color @Composable get() = if (LocalIsDarkTheme.current) Color(0xFF080C14) else AlabasterSand
+val pixelCardBg: Color @Composable get() = if (LocalIsDarkTheme.current) Color(0xFF131B2E) else Color(0xFFFFFFFF)
+val pixelDarkBorder: Color @Composable get() = if (LocalIsDarkTheme.current) Color(0xFFF8FAFC) else SlateBlue
+val pixelSecondaryText: Color @Composable get() = if (LocalIsDarkTheme.current) Color(0xFF94A3B8) else Color(0xFF64748B)
 
 /**
- * Pixelated Card Container with Islamic Architectural Notched Border & Corner Flourishes
+ * Neumorphic Card Container with Soft Extruded Dual Shadows & Subtle Corner Flourishes
  */
 @Composable
 fun PixelCardContainer(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = PixelCardBg,
-    borderColor: Color = PixelDarkBorder,
-    borderWidth: Dp = 2.5.dp,
+    backgroundColor: Color = Color.Unspecified,
+    borderColor: Color = Color.Unspecified,
+    borderWidth: Dp = 1.dp,
     content: @Composable () -> Unit
 ) {
-    Box(
-        modifier = modifier
-            .background(backgroundColor, shape = RoundedCornerShape(16.dp))
-            .border(width = borderWidth, color = borderColor, shape = RoundedCornerShape(16.dp))
-            .padding(14.dp)
+    val isDark = LocalIsDarkTheme.current
+    val effectiveBorder = if (borderColor != Color.Unspecified) borderColor else if (isDark) Color(0xFF2A3854) else SlateBlue
+    NeumorphicBox(
+        modifier = modifier,
+        shape = RoundedCornerShape(20.dp),
+        isDark = isDark,
+        elevation = 6.dp
     ) {
-        // Subtle Islamic corner flourishes drawn on top-left and top-right inner corners
-        Canvas(modifier = Modifier.matchParentSize()) {
-            val w = size.width
-            val h = size.height
-            val fSize = 16f
+        Box(
+            modifier = Modifier
+                .border(
+                    width = borderWidth,
+                    color = if (isDark) Color(0xFF2A3854).copy(alpha = 0.8f) else effectiveBorder.copy(alpha = 0.12f),
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .padding(16.dp)
+        ) {
+            // Subtle Islamic arabesque corner accents
+            Canvas(modifier = Modifier.matchParentSize()) {
+                val w = size.width
+                val h = size.height
+                val accentColor = if (isDark) Color(0xFF10B981).copy(alpha = 0.25f) else SlateBlue.copy(alpha = 0.08f)
 
-            // Top Left Corner Arabesque Notch
-            val topLeftPath = Path().apply {
-                moveTo(8f, 24f)
-                lineTo(24f, 8f)
-                lineTo(32f, 8f)
-                lineTo(8f, 32f)
-                close()
-            }
-            drawPath(topLeftPath, color = borderColor.copy(alpha = 0.25f))
+                // Top Left Accent Notch
+                val topLeftPath = Path().apply {
+                    moveTo(12f, 28f)
+                    lineTo(28f, 12f)
+                    lineTo(38f, 12f)
+                    lineTo(12f, 38f)
+                    close()
+                }
+                drawPath(topLeftPath, color = accentColor)
 
-            // Top Right Corner Arabesque Notch
-            val topRightPath = Path().apply {
-                moveTo(w - 8f, 24f)
-                lineTo(w - 24f, 8f)
-                lineTo(w - 32f, 8f)
-                lineTo(w - 8f, 32f)
-                close()
+                // Top Right Accent Notch
+                val topRightPath = Path().apply {
+                    moveTo(w - 12f, 28f)
+                    lineTo(w - 28f, 12f)
+                    lineTo(w - 38f, 12f)
+                    lineTo(w - 12f, 38f)
+                    close()
+                }
+                drawPath(topRightPath, color = accentColor)
             }
-            drawPath(topRightPath, color = borderColor.copy(alpha = 0.25f))
 
-            // Bottom Left Corner
-            val bottomLeftPath = Path().apply {
-                moveTo(8f, h - 24f)
-                lineTo(24f, h - 8f)
-                lineTo(32f, h - 8f)
-                lineTo(8f, h - 32f)
-                close()
-            }
-            drawPath(bottomLeftPath, color = borderColor.copy(alpha = 0.25f))
-
-            // Bottom Right Corner
-            val bottomRightPath = Path().apply {
-                moveTo(w - 8f, h - 24f)
-                lineTo(w - 24f, h - 8f)
-                lineTo(w - 32f, h - 8f)
-                lineTo(w - 8f, h - 32f)
-                close()
-            }
-            drawPath(bottomRightPath, color = borderColor.copy(alpha = 0.25f))
+            content()
         }
-
-        content()
     }
 }
 
@@ -333,10 +346,18 @@ fun PixelPurityGauge(
     purityPercentage: Int,
     modifier: Modifier = Modifier.size(230.dp)
 ) {
+    val isDark = LocalIsDarkTheme.current
     val animatedProgress by animateFloatAsState(
         targetValue = purityPercentage / 100f,
         label = "PurityProgress"
     )
+
+    val gaugeBorderColor = if (isDark) PixelGoldAccent else SlateBlue
+    val innerCircleFill = if (isDark) Color(0xFF1E293B) else Color(0xFFF8FAFC)
+    val latticeLineColor = if (isDark) Color(0xFF334155) else Color(0xFFCBD5E1)
+    val filledSegColor = if (isDark) PixelGreenAccent else SlateBlue
+    val unfilledSegColor = if (isDark) Color(0xFF334155) else Color(0xFFD1D5DB)
+    val textColor = if (isDark) Color.White else SlateBlue
 
     Box(
         modifier = modifier,
@@ -354,7 +375,7 @@ fun PixelPurityGauge(
 
             // Outer Pixel Border Ring
             drawCircle(
-                color = PixelDarkBorder,
+                color = gaugeBorderColor,
                 radius = radius + 12f,
                 center = Offset(cX, cY),
                 style = Stroke(width = 4f)
@@ -366,7 +387,7 @@ fun PixelPurityGauge(
                 val angleRad = angleDeg * (PI / 180f)
 
                 val isFilled = i < filledSegments
-                val segmentColor = if (isFilled) PixelDarkBorder else Color(0xFFD1D5DB)
+                val segmentColor = if (isFilled) filledSegColor else unfilledSegColor
 
                 val segWidth = 14f
                 val segHeight = 12f
@@ -381,7 +402,7 @@ fun PixelPurityGauge(
                         size = Size(segWidth, segHeight)
                     )
                     drawRect(
-                        color = PixelDarkBorder,
+                        color = gaugeBorderColor,
                         topLeft = Offset(x - segWidth / 2f, y - segHeight / 2f),
                         size = Size(segWidth, segHeight),
                         style = Stroke(width = 1f)
@@ -392,7 +413,7 @@ fun PixelPurityGauge(
             // Inner Boundary Circle Background Fill with Islamic Mosaic Pattern
             val innerRadius = radius - 16f
             drawCircle(
-                color = Color(0xFFF8FAFC),
+                color = innerCircleFill,
                 radius = innerRadius,
                 center = Offset(cX, cY)
             )
@@ -403,7 +424,7 @@ fun PixelPurityGauge(
                 val x1 = cX + innerRadius * cos(rad).toFloat()
                 val y1 = cY + innerRadius * sin(rad).toFloat()
                 drawLine(
-                    color = Color(0xFFCBD5E1),
+                    color = latticeLineColor,
                     start = Offset(cX, cY),
                     end = Offset(x1, y1),
                     strokeWidth = 1.2f
@@ -411,13 +432,13 @@ fun PixelPurityGauge(
 
                 // Concentric inner geometric rings
                 drawCircle(
-                    color = Color(0xFFCBD5E1),
+                    color = latticeLineColor,
                     radius = innerRadius * 0.5f,
                     center = Offset(cX, cY),
                     style = Stroke(width = 1f)
                 )
                 drawCircle(
-                    color = Color(0xFFCBD5E1),
+                    color = latticeLineColor,
                     radius = innerRadius * 0.8f,
                     center = Offset(cX, cY),
                     style = Stroke(width = 1f)
@@ -426,7 +447,7 @@ fun PixelPurityGauge(
 
             // Inner Boundary Circle Border
             drawCircle(
-                color = PixelDarkBorder,
+                color = gaugeBorderColor,
                 radius = innerRadius,
                 center = Offset(cX, cY),
                 style = Stroke(width = 3f)
@@ -456,7 +477,7 @@ fun PixelPurityGauge(
                 text = "$purityPercentage%",
                 fontSize = 26.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = PixelDarkBorder,
+                color = textColor,
                 letterSpacing = (-0.5).sp
             )
 
@@ -465,7 +486,7 @@ fun PixelPurityGauge(
                 text = "PURITY INDEX",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
-                color = PixelDarkBorder.copy(alpha = 0.8f),
+                color = if (isDark) PixelGoldAccent else SlateBlue.copy(alpha = 0.8f),
                 letterSpacing = 1.sp
             )
         }
@@ -774,6 +795,10 @@ fun PixelGreenRingGaugeIcon(
     ringColor: Color = PixelGreenAccent,
     isGranted: Boolean = false
 ) {
+    val isDark = LocalIsDarkTheme.current
+    val strokeBorder = if (isDark) Color(0xFF334155) else PixelDarkBorder
+    val innerFill = if (isDark) Color(0xFF0F172A) else Color.White
+
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center
@@ -786,11 +811,11 @@ fun PixelGreenRingGaugeIcon(
             val r = w / 2f - 4f
 
             // Outer dark pixel border
-            drawCircle(color = PixelDarkBorder, radius = r, center = Offset(cX, cY), style = Stroke(width = 4f))
+            drawCircle(color = strokeBorder, radius = r, center = Offset(cX, cY), style = Stroke(width = 3.5f))
 
             // Segmented ring segments
             val segments = 12
-            val activeColor = if (isGranted) ringColor else ringColor
+            val activeColor = if (isGranted) ringColor else Color(0xFFE11D48)
             for (i in 0 until segments) {
                 val startAngle = i * (360f / segments) - 90f
                 drawArc(
@@ -805,14 +830,14 @@ fun PixelGreenRingGaugeIcon(
             }
 
             // Inner circle fill
-            drawCircle(color = Color.White, radius = r - 10f, center = Offset(cX, cY))
-            drawCircle(color = PixelDarkBorder, radius = r - 10f, center = Offset(cX, cY), style = Stroke(width = 2.5f))
+            drawCircle(color = innerFill, radius = r - 10f, center = Offset(cX, cY))
+            drawCircle(color = strokeBorder, radius = r - 10f, center = Offset(cX, cY), style = Stroke(width = 2f))
         }
 
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = if (isGranted) PixelGreenAccent else Color(0xFFBA2D0B),
+            tint = if (isGranted) PixelGreenAccent else Color(0xFFFB7185),
             modifier = Modifier.size(24.dp)
         )
     }
@@ -830,12 +855,18 @@ fun PixelIslamicPermissionCard(
     onGrantClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = LocalIsDarkTheme.current
+    val cardBg = if (isDark) Color(0xFF131B2E) else Color(0xFFE2E8F0)
+    val cardBorder = if (isDark) Color(0xFF2A3854) else PixelDarkBorder
+    val itemTextColor = if (isDark) Color(0xFFF8FAFC) else PixelDarkBorder
+    val itemSubtextColor = if (isDark) Color(0xFF94A3B8) else PixelDarkBorder.copy(alpha = 0.8f)
+
     Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFE2E8F0))
-            .border(2.dp, PixelDarkBorder, RoundedCornerShape(12.dp))
+            .background(cardBg)
+            .border(1.5.dp, cardBorder, RoundedCornerShape(12.dp))
             .padding(12.dp)
     ) {
         Row(
@@ -862,7 +893,7 @@ fun PixelIslamicPermissionCard(
                         text = title,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = PixelDarkBorder,
+                        color = itemTextColor,
                         modifier = Modifier.weight(1f)
                     )
 
@@ -872,10 +903,10 @@ fun PixelIslamicPermissionCard(
                     Box(
                         modifier = Modifier
                             .background(
-                                if (isGranted) PixelGreenAccent else Color(0xFFBA2D0B),
+                                if (isGranted) PixelGreenAccent else Color(0xFFE11D48),
                                 shape = RoundedCornerShape(12.dp)
                             )
-                            .border(1.dp, PixelDarkBorder, RoundedCornerShape(12.dp))
+                            .border(1.dp, if (isDark) Color(0xFF334155) else PixelDarkBorder, RoundedCornerShape(12.dp))
                             .padding(horizontal = 8.dp, vertical = 3.dp)
                     ) {
                         Text(
@@ -892,7 +923,7 @@ fun PixelIslamicPermissionCard(
                 Text(
                     text = description,
                     fontSize = 10.5.sp,
-                    color = PixelDarkBorder.copy(alpha = 0.8f),
+                    color = itemSubtextColor,
                     lineHeight = 14.sp
                 )
 
@@ -905,9 +936,13 @@ fun PixelIslamicPermissionCard(
                         .height(34.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(
-                            if (isGranted) PixelGreenAccent.copy(alpha = 0.2f) else PixelGreenAccent
+                            if (isGranted) {
+                                if (isDark) PixelGreenAccent.copy(alpha = 0.15f) else PixelGreenAccent.copy(alpha = 0.2f)
+                            } else {
+                                PixelGreenAccent
+                            }
                         )
-                        .border(1.5.dp, PixelDarkBorder, RoundedCornerShape(8.dp))
+                        .border(1.2.dp, if (isDark) PixelGreenAccent.copy(alpha = 0.6f) else PixelDarkBorder, RoundedCornerShape(8.dp))
                         .clickable { onGrantClick() }
                         .padding(horizontal = 12.dp),
                     contentAlignment = Alignment.Center
@@ -925,7 +960,7 @@ fun PixelIslamicPermissionCard(
                             text = if (isGranted) "✓ Granted (Tap to Manage/Revoke)" else "Grant Permission",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = if (isGranted) PixelDarkBorder else Color.White
+                            color = if (isGranted) (if (isDark) PixelGreenAccent else PixelDarkBorder) else (if (isDark) Color(0xFF080C14) else Color.White)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         PixelCrescentStarIcon(
@@ -1042,105 +1077,293 @@ fun PixelXpLevelBar(
 }
 
 /**
- * 2D Pixelated Animated Loading Screen / Overlay
+ * Mind-blowing 2D Celestial Animated Loading Screen featuring the Prayer Character
  */
 @Composable
 fun PixelAnimatedLoadingScreen(
     statusText: String = "SYNCING DEEN SHIELD ENGINE...",
     modifier: Modifier = Modifier
 ) {
+    val isDark = LocalIsDarkTheme.current
     val infiniteTransition = rememberInfiniteTransition(label = "LoadingAnimation")
 
+    // Slow 360-degree rotation for celestial star mandala
     val rotationAngle by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1600, easing = LinearEasing),
+            animation = tween(12000, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
-        label = "MoonRotation"
+        label = "MandalaRotation"
     )
 
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 0.9f,
-        targetValue = 1.1f,
+    // Gentle vertical floating / levitation for the prayer guy
+    val floatOffset by infiniteTransition.animateFloat(
+        initialValue = -8f,
+        targetValue = 8f,
         animationSpec = infiniteRepeatable(
-            animation = tween(800, easing = FastOutSlowInEasing),
+            animation = tween(1800, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "PulseScale"
+        label = "PrayerFloat"
     )
+
+    // Breathing pulse for light halo
+    val haloScale by infiniteTransition.animateFloat(
+        initialValue = 0.95f,
+        targetValue = 1.08f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "HaloScale"
+    )
+
+    // Expanding light ripple wave from prayer mat
+    val rippleRadius by infiniteTransition.animateFloat(
+        initialValue = 0.2f,
+        targetValue = 1.4f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "RippleRadius"
+    )
+
+    val rippleAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "RippleAlpha"
+    )
+
+    // Rotating quote list
+    val loadingQuotes = remember {
+        listOf(
+            "Journey initializing...",
+            "Focusing heart and spirit...",
+            "Purity Shield active...",
+            "Establishing connection to the Almighty...",
+            "Preparing your spiritual sanctuary..."
+        )
+    }
+
+    var quoteIndex by remember { mutableIntStateOf(0) }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(2500)
+            quoteIndex = (quoteIndex + 1) % loadingQuotes.size
+        }
+    }
+
+    val screenBg = if (isDark) Color(0xFF080C14) else Color(0xFFFBF8F1)
+    val cardBg = if (isDark) Color(0xFF131B2E) else Color.White.copy(alpha = 0.85f)
+    val badgeBg = if (isDark) Color(0xFF131B2E) else Color(0xFF0F172A)
+    val barTrackBg = if (isDark) Color(0xFF1E293B) else Color(0xFFE2E8F0)
+    val strokeBorder = if (isDark) Color(0xFF2A3854) else PixelDarkBorder
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(PixelBgCanvas)
-            .padding(24.dp),
+            .background(screenBg),
         contentAlignment = Alignment.Center
     ) {
+        // LAYER 1: Animated Rotating 8-Pointed Celestial Geometric Mandala Canvas Background
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val cX = size.width / 2f
+            val cY = size.height / 2.3f
+            val maxR = size.width * 0.42f
+
+            // Radiating aura ripples
+            drawCircle(
+                color = PixelGreenAccent.copy(alpha = rippleAlpha * 0.3f),
+                radius = maxR * rippleRadius,
+                center = Offset(cX, cY)
+            )
+
+            rotate(rotationAngle, pivot = Offset(cX, cY)) {
+                // 8 Star Points
+                val points = 8
+                val outerR = maxR
+                val innerR = maxR * 0.65f
+
+                val path = Path()
+                for (i in 0 until points * 2) {
+                    val angle = (i * PI / points).toFloat()
+                    val r = if (i % 2 == 0) outerR else innerR
+                    val x = cX + r * cos(angle)
+                    val y = cY + r * sin(angle)
+                    if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                }
+                path.close()
+
+                drawPath(
+                    path = path,
+                    color = PixelGoldAccent.copy(alpha = if (isDark) 0.12f else 0.18f)
+                )
+                drawPath(
+                    path = path,
+                    color = PixelGoldAccent.copy(alpha = if (isDark) 0.5f else 0.4f),
+                    style = Stroke(width = 2.5f)
+                )
+
+                // Concentric Sacred Rings
+                drawCircle(
+                    color = PixelGreenAccent.copy(alpha = if (isDark) 0.35f else 0.25f),
+                    radius = maxR * 0.85f,
+                    center = Offset(cX, cY),
+                    style = Stroke(width = 2f)
+                )
+                drawCircle(
+                    color = PixelGoldAccent.copy(alpha = if (isDark) 0.45f else 0.35f),
+                    radius = maxR * 0.5f,
+                    center = Offset(cX, cY),
+                    style = Stroke(width = 1.5f)
+                )
+            }
+        }
+
+        // LAYER 2: Floating Celestial Sparkles / 8-Bit Orbs Canvas
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val cX = size.width / 2f
+            val cY = size.height / 2.3f
+
+            for (i in 0 until 12) {
+                val angle = (i * 30f + rotationAngle * 1.5f) * (PI / 180f)
+                val dist = (size.width * 0.38f) + sin(rotationAngle * 0.05f + i) * 15f
+                val sx = cX + dist * cos(angle).toFloat()
+                val sy = cY + dist * sin(angle).toFloat()
+
+                drawCircle(
+                    color = if (i % 2 == 0) PixelGoldAccent else PixelGreenAccent,
+                    radius = 4f + (i % 3) * 2f,
+                    center = Offset(sx, sy)
+                )
+            }
+        }
+
+        // LAYER 3: Main Character & Status Column
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
         ) {
-            // Rotating & Bouncing 2D Crescent Hourglass Ring
+            // Glowing Halo & Levitating Prayer Man Character
             Box(
                 modifier = Modifier
-                    .size(110.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Color(0xFF0F172A))
-                    .border(3.dp, PixelGoldAccent, RoundedCornerShape(20.dp))
-                    .padding(16.dp),
+                    .size(240.dp)
+                    .offset(y = floatOffset.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    rotate(rotationAngle) {
-                        scale(pulseScale) {
-                            val w = size.width
-                            val h = size.height
+                // Outer Pulse Light Halo Ring
+                Box(
+                    modifier = Modifier
+                        .size((210 * haloScale).dp)
+                        .clip(CircleShape)
+                        .background(PixelGoldAccent.copy(alpha = if (isDark) 0.2f else 0.15f))
+                        .border(2.dp, PixelGoldAccent.copy(alpha = 0.5f), CircleShape)
+                )
 
-                            drawCircle(
-                                color = PixelGreenAccent,
-                                radius = w * 0.4f,
-                                style = Stroke(width = 6f)
-                            )
-                            drawCircle(
-                                color = PixelGoldAccent,
-                                radius = w * 0.2f,
-                                center = Offset(w / 2f + 10f, h / 2f - 10f)
-                            )
-                        }
-                    }
+                // Prayer Character Artwork Frame
+                Box(
+                    modifier = Modifier
+                        .size(190.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(cardBg)
+                        .border(3.dp, PixelGoldAccent, RoundedCornerShape(24.dp))
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.img_prayer_man_1786189878726),
+                        contentDescription = "Prayer Character",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(18.dp)),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Fit
+                    )
                 }
+            }
 
-                Icon(
-                    imageVector = Icons.Default.HourglassEmpty,
-                    contentDescription = "Loading",
-                    tint = PixelGoldAccent,
-                    modifier = Modifier.size(36.dp)
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // Status Badge Frame
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(badgeBg)
+                    .border(2.dp, PixelGoldAccent, RoundedCornerShape(16.dp))
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = statusText,
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = PixelGoldAccent,
+                        letterSpacing = 1.2.sp,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = loadingQuotes[quoteIndex],
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // 8-Bit Glowing Shimmer Loading Bar
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.7f)
+                    .height(12.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(barTrackBg)
+                    .border(1.5.dp, strokeBorder, RoundedCornerShape(6.dp))
+            ) {
+                val progressAlpha by infiniteTransition.animateFloat(
+                    initialValue = 0.3f,
+                    targetValue = 1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(700, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "ProgressGlow"
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.68f)
+                        .fillMaxSize()
+                        .background(PixelGreenAccent.copy(alpha = progressAlpha))
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = statusText,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = PixelDarkBorder,
-                letterSpacing = 1.sp,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // 8-bit Dot indicators
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                repeat(3) { index ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                repeat(4) { index ->
                     val dotAlpha by infiniteTransition.animateFloat(
                         initialValue = 0.2f,
                         targetValue = 1f,
                         animationSpec = infiniteRepeatable(
-                            animation = tween(600, delayMillis = index * 200, easing = LinearEasing),
+                            animation = tween(500, delayMillis = index * 150, easing = LinearEasing),
                             repeatMode = RepeatMode.Reverse
                         ),
                         label = "DotAlpha$index"
@@ -1148,8 +1371,8 @@ fun PixelAnimatedLoadingScreen(
                     Box(
                         modifier = Modifier
                             .size(10.dp)
-                            .background(PixelGreenAccent.copy(alpha = dotAlpha), shape = RoundedCornerShape(2.dp))
-                            .border(1.dp, PixelDarkBorder, shape = RoundedCornerShape(2.dp))
+                            .background(PixelGoldAccent.copy(alpha = dotAlpha), shape = RoundedCornerShape(2.dp))
+                            .border(1.dp, strokeBorder, shape = RoundedCornerShape(2.dp))
                     )
                 }
             }
@@ -1728,7 +1951,30 @@ fun PixelQuestActionDialog(
 ) {
     var isAccepted by remember { mutableStateOf(false) }
     var hasTakenLivePhoto by remember { mutableStateOf(false) }
+    var capturedBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
     var isVerifying by remember { mutableStateOf(false) }
+    var verificationResult by remember { mutableStateOf<com.example.utils.QuestVerificationResult?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+
+    val cameraLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) {
+            capturedBitmap = bitmap
+            hasTakenLivePhoto = true
+            verificationResult = null
+            isVerifying = true
+            coroutineScope.launch {
+                val res = com.example.utils.GeminiQuestVerifier.verifyQuestPhoto(
+                    bitmap = bitmap,
+                    questTitle = quest.title,
+                    questDescription = quest.description
+                )
+                verificationResult = res
+                isVerifying = false
+            }
+        }
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Box(
@@ -1916,17 +2162,41 @@ fun PixelQuestActionDialog(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // Simulated Live Viewfinder Box
+                    // Live Viewfinder Box
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(150.dp)
+                            .height(170.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(if (hasTakenLivePhoto) Color(0xFF065F46) else Color(0xFF020617))
                             .border(2.dp, if (hasTakenLivePhoto) PixelGreenAccent else Color(0xFF475569), RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (hasTakenLivePhoto) {
+                        if (capturedBitmap != null) {
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                androidx.compose.foundation.Image(
+                                    bitmap = capturedBitmap!!.asImageBitmap(),
+                                    contentDescription = "Live Proof Photo",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .fillMaxWidth()
+                                        .background(Color.Black.copy(alpha = 0.65f))
+                                        .padding(vertical = 4.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "✓ Live Camera Proof Captured",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = PixelGreenAccent
+                                    )
+                                }
+                            }
+                        } else if (hasTakenLivePhoto) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(
                                     imageVector = Icons.Default.CheckCircle,
@@ -1952,7 +2222,7 @@ fun PixelQuestActionDialog(
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = "Ready to Snap Live Proof",
+                                    text = "Tap button below to launch Camera",
                                     fontSize = 11.sp,
                                     color = Color.White.copy(alpha = 0.7f)
                                 )
@@ -1963,27 +2233,41 @@ fun PixelQuestActionDialog(
                     Spacer(modifier = Modifier.height(14.dp))
 
                     if (isVerifying) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth()
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFF1E293B))
+                                .padding(12.dp)
                         ) {
-                            CircularProgressIndicator(
-                                color = PixelGreenAccent,
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    color = PixelGreenAccent,
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.5.dp
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = "🤖 Gemini Vision AI Analyzing Photo...",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = PixelGreenAccent
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "AI Reviewing Live Photo...",
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = PixelGreenAccent
+                                text = "Inspecting image for quest task compliance...",
+                                fontSize = 10.5.sp,
+                                color = Color.White.copy(alpha = 0.7f)
                             )
                         }
                     } else if (!hasTakenLivePhoto) {
                         Button(
-                            onClick = { hasTakenLivePhoto = true },
+                            onClick = { cameraLauncher.launch(null) },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = PixelGoldAccent,
                                 contentColor = PixelDarkBorder
@@ -2008,28 +2292,117 @@ fun PixelQuestActionDialog(
                                 )
                             }
                         }
-                    } else {
-                        Button(
-                            onClick = {
-                                isVerifying = true
-                                onVerifyAndClaimPoints(quest.id)
-                                onDismiss()
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = PixelGreenAccent,
-                                contentColor = PixelDarkBorder
-                            ),
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(44.dp)
-                                .border(2.dp, PixelDarkBorder, RoundedCornerShape(10.dp))
-                        ) {
-                            Text(
-                                text = "SUBMIT & CLAIM +${quest.points} POINTS",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.ExtraBold
-                            )
+                    } else if (verificationResult != null) {
+                        val result = verificationResult!!
+                        if (result.isVerified) {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color(0xFF065F46))
+                                        .border(1.5.dp, PixelGreenAccent, RoundedCornerShape(10.dp))
+                                        .padding(10.dp)
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "✅ QUEST VERIFIED BY AI VISION",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = PixelGreenAccent
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = result.reason,
+                                            fontSize = 10.5.sp,
+                                            color = Color.White.copy(alpha = 0.9f)
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                Button(
+                                    onClick = {
+                                        onVerifyAndClaimPoints(quest.id)
+                                        onDismiss()
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = PixelGreenAccent,
+                                        contentColor = PixelDarkBorder
+                                    ),
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(44.dp)
+                                        .border(2.dp, PixelDarkBorder, RoundedCornerShape(10.dp))
+                                ) {
+                                    Text(
+                                        text = "SUBMIT & CLAIM +${quest.points} POINTS",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.ExtraBold
+                                    )
+                                }
+                            }
+                        } else {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color(0xFF881337))
+                                        .border(1.5.dp, Color(0xFFF43F5E), RoundedCornerShape(10.dp))
+                                        .padding(10.dp)
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = "❌ VERIFICATION REJECTED BY AI",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = Color(0xFFFDA4AF)
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = result.reason,
+                                            fontSize = 10.5.sp,
+                                            color = Color.White.copy(alpha = 0.9f)
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                Button(
+                                    onClick = {
+                                        hasTakenLivePhoto = false
+                                        capturedBitmap = null
+                                        verificationResult = null
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFE11D48),
+                                        contentColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(10.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(44.dp)
+                                        .border(2.dp, PixelDarkBorder, RoundedCornerShape(10.dp))
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Refresh,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "RETAKE LIVE PHOTO",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.ExtraBold
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -2400,6 +2773,10 @@ fun PixelAccountProfileDialog(
     purityIndex: Int,
     zakatDonated: Double,
     resistedCount: Int,
+    isDarkMode: Boolean = true,
+    userArchetype: com.example.data.UserArchetype? = null,
+    onRetakeDiagnostic: () -> Unit = {},
+    onToggleDarkMode: () -> Unit = {},
     onDismiss: () -> Unit
 ) {
     // Rank System Logic
@@ -2582,7 +2959,118 @@ fun PixelAccountProfileDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                // Theme Preferences
+                Spacer(modifier = Modifier.height(14.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFF1E293B))
+                        .border(1.5.dp, PixelDarkBorder, RoundedCornerShape(10.dp))
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = if (isDarkMode) "🌙" else "☀️",
+                            fontSize = 18.sp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = if (isDarkMode) "NIGHT PALETTE ACTIVE" else "DAY PALETTE ACTIVE",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = PixelGoldAccent
+                            )
+                            Text(
+                                text = if (isDarkMode) "Deep Slate & Emerald Glow" else "Alabaster Sand & Soft Clay",
+                                fontSize = 9.sp,
+                                color = Color.White.copy(alpha = 0.65f)
+                            )
+                        }
+                    }
+
+                    PixelThemeToggleSwitch(
+                        isDarkMode = isDarkMode,
+                        onToggle = onToggleDarkMode
+                    )
+                }
+
+                // Spiritual Blueprint Archetype Card
+                if (userArchetype != null) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFF1E293B))
+                            .border(1.5.dp, PixelGreenAccent, RoundedCornerShape(10.dp))
+                            .padding(10.dp)
+                    ) {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "SPIRITUAL BLUEPRINT",
+                                    fontSize = 9.5.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = PixelGoldAccent,
+                                    letterSpacing = 0.8.sp
+                                )
+                                Text(
+                                    text = userArchetype.badge,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PixelGreenAccent
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Text(
+                                text = userArchetype.title,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Text(
+                                text = userArchetype.primaryFocus,
+                                fontSize = 10.sp,
+                                color = Color(0xFF94A3B8)
+                            )
+                        }
+                    }
+                }
+
+                // Retake Spiritual Diagnostic Button
+                Spacer(modifier = Modifier.height(10.dp))
+                Button(
+                    onClick = {
+                        onDismiss()
+                        onRetakeDiagnostic()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF1E293B),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(38.dp)
+                        .border(1.5.dp, PixelGoldAccent, RoundedCornerShape(10.dp))
+                ) {
+                    Text(
+                        text = "📋 RETAKE SPIRITUAL DIAGNOSTIC",
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = PixelGoldAccent
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Button(
                     onClick = onDismiss,
@@ -2603,6 +3091,58 @@ fun PixelAccountProfileDialog(
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Pixel-Art Animated Dark/Light Mode Toggle Switch (Item 1)
+ */
+@Composable
+fun PixelThemeToggleSwitch(
+    isDarkMode: Boolean,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val thumbOffset by animateFloatAsState(
+        targetValue = if (isDarkMode) 22f else 0f,
+        animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
+        label = "ThemeToggleOffset"
+    )
+
+    Box(
+        modifier = modifier
+            .width(52.dp)
+            .height(28.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (isDarkMode) Color(0xFF0F172A) else Color(0xFFE2E8F0))
+            .border(2.dp, if (isDarkMode) PixelGoldAccent else PixelDarkBorder, RoundedCornerShape(14.dp))
+            .clickable(onClick = onToggle)
+            .padding(3.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = "☀️", fontSize = 9.sp, modifier = Modifier.padding(start = 2.dp))
+            Text(text = "🌙", fontSize = 9.sp, modifier = Modifier.padding(end = 2.dp))
+        }
+
+        Box(
+            modifier = Modifier
+                .offset(x = thumbOffset.dp)
+                .size(20.dp)
+                .clip(CircleShape)
+                .background(if (isDarkMode) PixelGoldAccent else PixelGreenAccent)
+                .border(1.5.dp, PixelDarkBorder, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = if (isDarkMode) "🌙" else "☀️",
+                fontSize = 9.sp
+            )
         }
     }
 }

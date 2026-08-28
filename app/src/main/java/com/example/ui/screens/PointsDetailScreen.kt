@@ -64,6 +64,7 @@ import com.example.ui.components.PixelGoldAccent
 import com.example.ui.components.PixelGreenAccent
 import com.example.ui.components.PixelQuestActionDialog
 import com.example.ui.components.PixelZakatDonationWizard
+import com.example.ui.theme.SlateBlue
 import com.example.ui.viewmodel.MainViewModel
 
 @Composable
@@ -87,7 +88,9 @@ fun PointsDetailScreen(
     val completedQuestPoints = dailyQuests.filter { it.isCompleted }.sumOf { it.points }
     val pointsEarnedToday = completedPrayerPoints + completedQuestPoints
 
-    val unclaimedQuestPoints = dailyQuests.filter { !it.isCompleted }.sumOf { it.points }
+    val unclaimedQuests = dailyQuests.filter { !it.isCompleted }
+    val pendingQuestsCount = unclaimedQuests.size
+    val unclaimedQuestPoints = unclaimedQuests.sumOf { it.points }
 
     // Dialogs
     if (selectedQuestForAction != null) {
@@ -122,29 +125,35 @@ fun PointsDetailScreen(
         )
     }
 
+    val isDarkMode by viewModel.isDarkMode.collectAsState()
+    val textColor = if (isDarkMode) Color(0xFFF8FAFC) else SlateBlue
+    val subtextColor = if (isDarkMode) Color(0xFF94A3B8) else SlateBlue.copy(alpha = 0.75f)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(PixelBgCanvas)
+            .background(if (isDarkMode) Color(0xFF080C14) else PixelBgCanvas)
     ) {
         // Geometric Islamic Tile Lattice Background Effect
         Canvas(modifier = Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
             val step = 80f
+            val dotColor = if (isDarkMode) Color(0xFF101726) else Color(0xFFDCDFE3)
+            val lineCol = if (isDarkMode) Color(0xFF0D1420) else Color(0xFFE2E5E9)
 
             for (x in 0..(w / step).toInt()) {
                 for (y in 0..(h / step).toInt()) {
                     val px = x * step
                     val py = y * step
                     drawCircle(
-                        color = Color(0xFFDCDFE3),
+                        color = dotColor,
                         radius = 20f,
                         center = Offset(px, py),
                         style = Stroke(width = 1.5f)
                     )
                     drawLine(
-                        color = Color(0xFFE2E5E9),
+                        color = lineCol,
                         start = Offset(px - 10f, py),
                         end = Offset(px + 10f, py),
                         strokeWidth = 1f
@@ -256,7 +265,7 @@ fun PointsDetailScreen(
                             Column {
                                 if (unclaimedQuestPoints > 0) {
                                     Text(
-                                        text = "⚡ $unclaimedQuestPoints Unclaimed Quest Points Available!",
+                                        text = "⚡ $pendingQuestsCount Quests Available to Complete ($unclaimedQuestPoints PTS)",
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.ExtraBold,
                                         color = Color(0xFFB45309)
