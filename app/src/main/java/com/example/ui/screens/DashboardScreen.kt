@@ -65,6 +65,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.DailyQuest
 import com.example.data.PrayerItem
 import com.example.data.QuestCategory
+import com.example.ui.components.ClaymorphicStreakCard
 import com.example.ui.components.DoraemonEasterEgg
 import com.example.ui.components.GuidedPathHeader
 import com.example.ui.components.PixelAccountProfileDialog
@@ -384,7 +385,16 @@ fun DashboardScreen(
                 onClick = { showIrlTipsModal = true }
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // ==========================================
+            // CLAYMORPHIC NAMAZ STREAK WIDGET PREVIEW CARD
+            // ==========================================
+            ClaymorphicStreakCard(
+                streakCount = prayersList.count { it.isCompleted }.coerceAtLeast(1)
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
 
             // ==========================================
             // 3. ACTIVE SHIELD CARD

@@ -1,3 +1,27 @@
 <resources>
     <string name="app_name">FocusGuard</string>
+    <string name="title_dashboard">Guided Path</string>
+    <string name="title_focus">Focus &amp; Prayer</string>
+    <string name="title_apps">Apps you want to block</string>
+    <string name="title_permissions">Engine</string>
+    <string name="title_leaderboard">Leaderboard</string>
+    <string name="title_quests">Quests &amp; Points</string>
+    <string name="title_profile">Profile &amp; Sitr</string>
+
+    <string name="btn_start_focus">START FOCUS SESSION</string>
+    <string name="btn_stop_focus">END SESSION</string>
+    <string name="btn_close_protect">CLOSE &amp; PROTECT PEACE</string>
+    <string name="label_token_staking">Token Staking (Loss Aversion)</string>
+    <string name="label_ghost_run">Ghost Run vs Personal Best</string>
+    <string name="label_hardcore_mode">Strict Hardcore Lock</string>
+    <string name="label_boss_battle">Weekly Boss Battle</string>
+
+    <string name="friction_step_1">HARD PAUSE: 60 SECONDS</string>
+    <string name="friction_step_2">COGNITIVE RESET</string>
+    <string name="friction_step_3">THE MIRROR</string>
+    <string name="friction_step_4">THE ESCAPE HATCH</string>
+    <string name="friction_statement">I am trading my peace for a temporary distraction.</string>
+    <string name="widget_streak_title">Namaz Streak</string>
+    <string name="widget_streak_description">Interactive claymorphic prayer streak widget with dynamic flame states</string>
 </resources>
+

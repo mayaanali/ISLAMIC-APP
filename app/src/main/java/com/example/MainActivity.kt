@@ -1,10 +1,10 @@
 package com.example
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.fragment.app.FragmentActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -63,13 +63,16 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Profile : Screen("profile", "Profile", Icons.Default.Person)
 }
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Enforce FLAG_SECURE to prevent screenshot scraping, screen recording & accessibility overlays
+        com.example.utils.SecurityGuard.enforceFlagSecure(this)
 
         // Attempt starting foreground monitoring service if permissions already granted
         viewModel.startForegroundServiceIfPermissionsGranted(this)
@@ -159,6 +162,8 @@ fun MainAppContent(
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.Dashboard.route) {
+                val context = androidx.compose.ui.platform.LocalContext.current
+                val fragmentActivity = context as? FragmentActivity
                 DashboardScreen(
                     viewModel = viewModel,
                     onNavigateToApps = { navController.navigate(Screen.Apps.route) },
@@ -167,7 +172,23 @@ fun MainAppContent(
                     onNavigateToLeaderboard = { navController.navigate(Screen.Leaderboard.route) },
                     onNavigateToQuests = { navController.navigate(Screen.Quests.route) },
                     onNavigateToOnboarding = { navController.navigate(Screen.Onboarding.route) },
-                    onNavigateToProfile = { navController.navigate(Screen.Profile.route) }
+                    onNavigateToProfile = {
+                        if (fragmentActivity != null && com.example.utils.BiometricAuthHelper.isBiometricAvailable(fragmentActivity)) {
+                            com.example.utils.BiometricAuthHelper.promptBiometricAuthentication(
+                                activity = fragmentActivity,
+                                title = "Unlock Settings & Profile",
+                                subtitle = "Biometric authorization required to access settings and streak controls",
+                                onSuccess = {
+                                    navController.navigate(Screen.Profile.route)
+                                },
+                                onError = { err ->
+                                    android.widget.Toast.makeText(context, "Biometric check: $err", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        } else {
+                            navController.navigate(Screen.Profile.route)
+                        }
+                    }
                 )
             }
 

@@ -55,4 +55,19 @@ object UsageTracker {
         val ms = stats[packageName] ?: 0L
         return ms / 1000L
     }
+
+    /**
+     * Format duration in seconds to human readable string (e.g., 0m, 3m, 1h 1m).
+     */
+    fun formatDuration(seconds: Long): String {
+        if (seconds <= 0) return "0m"
+        val hours = seconds / 3600
+        val minutes = (seconds % 3600) / 60
+        return when {
+            hours > 0 && minutes > 0 -> "${hours}h ${minutes}m"
+            hours > 0 -> "${hours}h"
+            else -> "${minutes}m"
+        }
+    }
 }
+

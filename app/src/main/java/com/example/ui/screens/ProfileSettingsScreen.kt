@@ -693,12 +693,13 @@ fun ProfileSettingsScreen(
 
     // 5. Reset Profile Dialog
     if (showResetDialog) {
+        val fragmentActivity = context as? androidx.fragment.app.FragmentActivity
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
-            title = { Text("Reset Account Profile?", fontWeight = FontWeight.Bold, color = textPrimary) },
+            title = { Text("Reset Account Profile & Streaks?", fontWeight = FontWeight.Bold, color = textPrimary) },
             text = {
                 Text(
-                    text = "This will restore default profile values and reset streaks. Are you sure you want to proceed?",
+                    text = "This will restore default profile values and reset streaks. Biometric authorization is required to prevent accidental or unauthorized streak resets.",
                     color = textSecondary,
                     fontSize = 14.sp
                 )
@@ -706,13 +707,29 @@ fun ProfileSettingsScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.resetAccountProfile()
-                        showResetDialog = false
-                        Toast.makeText(context, "Profile reset to defaults.", Toast.LENGTH_SHORT).show()
+                        if (fragmentActivity != null && com.example.utils.BiometricAuthHelper.isBiometricAvailable(fragmentActivity)) {
+                            com.example.utils.BiometricAuthHelper.promptBiometricAuthentication(
+                                activity = fragmentActivity,
+                                title = "Authorize Streak Reset",
+                                subtitle = "Verify biometric credential to reset spiritual progress & rules",
+                                onSuccess = {
+                                    viewModel.resetAccountProfile()
+                                    showResetDialog = false
+                                    Toast.makeText(context, "Profile and streaks reset to defaults.", Toast.LENGTH_SHORT).show()
+                                },
+                                onError = { err ->
+                                    Toast.makeText(context, "Biometric verification failed: $err", Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        } else {
+                            viewModel.resetAccountProfile()
+                            showResetDialog = false
+                            Toast.makeText(context, "Profile reset to defaults.", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = RubyRed)
                 ) {
-                    Text("Reset Profile", color = Color.White)
+                    Text("Verify & Reset", color = Color.White)
                 }
             },
             dismissButton = {

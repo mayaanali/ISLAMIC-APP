@@ -44,4 +44,10 @@ interface AppBlockerDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUsageLog(log: UsageLogEntity)
+
+    @Query("DELETE FROM usage_logs WHERE dateString < :cutoffDate")
+    suspend fun deleteStaleUsageLogs(cutoffDate: String): Int
+
+    @Query("DELETE FROM usage_logs")
+    suspend fun clearAllUsageLogs()
 }

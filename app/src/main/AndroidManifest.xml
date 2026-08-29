@@ -17,9 +17,9 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
-        android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -69,6 +69,19 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
+
+        <!-- Namaz Streak Claymorphic Glance App Widget -->
+        <receiver
+            android:name=".widget.NamazStreakWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_streak_title">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/namaz_streak_widget_info" />
+        </receiver>
 
     </application>
 

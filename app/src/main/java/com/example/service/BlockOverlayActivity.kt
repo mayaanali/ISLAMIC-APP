@@ -17,6 +17,9 @@ class BlockOverlayActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Enforce FLAG_SECURE to prevent screenshot scraping and overlay interception
+        com.example.utils.SecurityGuard.enforceFlagSecure(this)
+
         val appName = intent.getStringExtra(EXTRA_APP_NAME) ?: "Distraction Blocker"
         val packageName = intent.getStringExtra(EXTRA_PACKAGE_NAME) ?: ""
         val reason = intent.getStringExtra(EXTRA_REASON) ?: "Night Shield Active"
